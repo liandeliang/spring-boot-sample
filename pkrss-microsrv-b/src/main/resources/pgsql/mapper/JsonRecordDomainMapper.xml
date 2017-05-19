@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.myzc98.server.mapper.JsonRecordDomainMapper" >
+  <resultMap id="BaseResultMap" type="com.myzc98.server.domain.JsonRecordDomain" >
+    <!--
+      WARNING - @mbggenerated
+    -->
+    <id column="key_type" property="keyType" jdbcType="VARCHAR" />
+    <id column="key_id" property="keyId" jdbcType="BIGINT" />
+    <result column="ext" property="ext" jdbcType="OTHER" typeHandler="com.myzc98.server.mybatis.typehandler.JsonTypeHandler" />
+    <result column="create_time" property="createTime" jdbcType="TIMESTAMP" />
+  </resultMap>
+</mapper>

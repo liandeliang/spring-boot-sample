@@ -1,0 +1,33 @@
+
+my:
+  message:
+    test: a
+    
+ribbon:
+  ServerListRefreshInterval: 1000
+
+endpoints:
+  health:
+    sensitive: false
+  restart:
+    enabled: true
+  shutdown:
+    enabled: true
+
+
+security:
+    basic:
+        enabled: false
+        
+logging:
+    level:
+        org:
+            springframework:
+                security: INFO
+
+---
+
+spring:
+  profiles: default
+
+debug: true

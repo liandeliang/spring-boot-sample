@@ -1,0 +1,6 @@
+spring:
+  application:
+    name: pkrss_microsrv_consul
+  cloud:
+    consul:
+        host: consul.third.docker.pkrss.com

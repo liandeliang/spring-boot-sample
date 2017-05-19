@@ -1,0 +1,10 @@
+spring:
+  application:
+    name: pkrss_microsrv_config
+encrypt:
+  failOnError: false
+  keyStore: # keytool -genkeypair -alias pswKey -keyalg RSA -dname "CN=Web Server,OU=Unit,O=Organization,L=City,S=State,C=US" -keypass username -keystore server.jks -storepass password
+    location: classpath:/server.jks
+    password: password
+    alias: pswKey
+    secret: username

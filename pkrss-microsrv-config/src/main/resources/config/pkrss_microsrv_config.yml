@@ -1,0 +1,35 @@
+
+spring:
+  cloud:
+    config:
+      discovery:
+        enabled: true
+server:
+  port: 18001
+endpoints:
+  restart:
+    enabled: true
+  shutdown:
+    enabled: true
+  health:
+    sensitive: false
+eureka:
+  instance:
+    hostname: config.microsrv.docker.pkrss.com
+    nonSecurePort: 80
+  client:
+    registerWithEureka: true
+    fetchRegistry: true
+    serviceUrl:
+      defaultZone: http://discovery.microsrv.docker.pkrss.com:18002/eureka/
+    
+---
+
+spring:
+  profiles: docker
+          
+logging:
+  level:
+    com.netflix.discovery: 'OFF'
+    org.springframework.cloud: 'DEBUG'
+    

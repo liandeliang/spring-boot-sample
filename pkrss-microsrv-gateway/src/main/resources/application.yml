@@ -1,0 +1,33 @@
+server:
+  port: 18004
+
+sidecar:
+  port: 18003
+  health-uri: http://localhost:18003/health.json
+
+endpoints:
+  restart:
+    enabled: true
+  shutdown:
+    enabled: true
+  health:
+    sensitive: false
+
+eureka:
+  instance:
+    hostname: gateway.microsrv.docker.pkrss.com
+  client:
+    registerWithEureka: true
+    fetchRegistry: true
+    serviceUrl:
+      defaultZone: http://discovery.microsrv.docker.pkrss.com:18002/eureka/
+      
+zuul:
+  ignoredServices: '*'
+  routes:
+    a:
+      path: /a/**
+      serviceId: pkrss_microsrv_a
+    b:
+      path: /b/**
+      serviceId: pkrss_microsrv_b

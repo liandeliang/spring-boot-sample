@@ -1,0 +1,38 @@
+server:
+  port: 18003
+
+ribbon: 
+  ServerListRefreshInterval: 1000
+
+endpoints:
+  health:
+    sensitive: false
+  restart:
+    enabled: true
+  shutdown:
+    enabled: true
+
+logging:
+  level: 
+    org.springframework.cloud.consul: WARN
+
+eureka: 
+  client: 
+    registerWithEureka: true
+    fetchRegistry: false
+    serviceUrl:
+      defaultZone: http://discovery.microsrv.docker.pkrss.com:18002/eureka/
+
+spring: 
+  profiles: 
+    active: default
+  cloud.config.discovery.enabled: true
+
+---
+
+spring:
+  profiles: default
+
+logging:
+  level:
+    org.springframework.cloud.consul: DEBUG

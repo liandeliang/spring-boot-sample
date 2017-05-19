@@ -1,0 +1,21 @@
+server:
+  port: 18001
+
+management:
+  context-path: /admin
+  
+eureka:
+  instance:
+    hostname: config.microsrv.docker.pkrss.com
+    leaseRenewalIntervalInSeconds: 10
+    statusPageUrlPath: /admin/info
+    healthCheckUrlPath: /admin/health
+  client:
+    registerWithEureka: true
+    fetchRegistry: true
+    serviceUrl:
+      defaultZone: http://discovery.microsrv.docker.pkrss.com:18002/eureka/
+
+spring:
+  profiles:
+    active: native

@@ -1,0 +1,8 @@
+spring:
+  application:
+    name: pkrss-microsrv-b
+  cloud:
+    config:
+      uri: http://username:password@config.microsrv.docker.pkrss.com:18001
+encrypt:
+  failOnError: false

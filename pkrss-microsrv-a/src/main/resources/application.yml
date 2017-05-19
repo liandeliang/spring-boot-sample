@@ -1,0 +1,19 @@
+server:
+  port: 19001
+
+eureka:
+  client:
+    serviceUrl:
+      defaultZone: http://discovery.microsrv.docker.pkrss.com:18002/eureka/
+  instance:
+    preferIpAddress: true
+    
+security:
+  basic:
+    enabled: false
+        
+# feign.httpclient.enabled: true
+
+#ribbon:
+#  eureka: 
+#    enabled: true
