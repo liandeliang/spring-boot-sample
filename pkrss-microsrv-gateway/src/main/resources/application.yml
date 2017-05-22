@@ -29,15 +29,16 @@ ribbon:
     enabled: true
 
 zuul:
+#  prefix: /api
   ignoredServices: '*'
   routes:
     a:
       path: /a/**
-      serviceId: pkrss_microsrv_a
+      serviceId: pkrss-microsrv-a
       strip-prefix: false
     b:
       path: /b/**
-      serviceId: pkrss_microsrv_b
+      serviceId: pkrss-microsrv-b
       strip-prefix: false
 
 # hystrix.command.default.execution.isolation.thread.timeoutInMilliseconds: 20000

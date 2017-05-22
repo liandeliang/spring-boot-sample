@@ -11,4 +11,4 @@ eureka:
       defaultZone: http://discovery.microsrv.docker.pkrss.com:${server.port}/eureka/
       # defaultZone: http://user:password@discovery.microsrv.docker.pkrss.com:${server.port}/eureka/
 
-spring.cloud.config.discovery.enabled: true
+# spring.cloud.config.discovery.enabled: true
