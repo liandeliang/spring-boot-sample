@@ -4,7 +4,7 @@ server:
 eureka:
   client:
     registerWithEureka: true
-    fetchRegistry: false
+    fetchRegistry: true
     serviceUrl:
       defaultZone: http://discovery.microsrv.docker.pkrss.com:18002/eureka/
   instance:

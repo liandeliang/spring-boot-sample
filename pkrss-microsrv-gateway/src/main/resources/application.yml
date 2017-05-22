@@ -3,7 +3,8 @@ server:
 
 sidecar:
   port: 18003
-  health-uri: http://localhost:18003/health.json
+  hostname: consul.microsrv.docker.pkrss.com
+  health-uri: http://consul.microsrv.docker.pkrss.com:18003/health.json
 
 endpoints:
   restart:
@@ -15,19 +16,28 @@ endpoints:
 
 eureka:
   instance:
-    hostname: gateway.microsrv.docker.pkrss.com
+#    hostname: gateway.microsrv.docker.pkrss.com
+    prefer-ip-address: true
   client:
     registerWithEureka: true
     fetchRegistry: true
     serviceUrl:
       defaultZone: http://discovery.microsrv.docker.pkrss.com:18002/eureka/
-      
+
+ribbon:
+  eureka:
+    enabled: true
+
 zuul:
   ignoredServices: '*'
   routes:
     a:
       path: /a/**
       serviceId: pkrss_microsrv_a
+      strip-prefix: false
     b:
       path: /b/**
       serviceId: pkrss_microsrv_b
+      strip-prefix: false
+
+# hystrix.command.default.execution.isolation.thread.timeoutInMilliseconds: 20000

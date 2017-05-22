@@ -5,7 +5,7 @@
     
     <parent>
 		<groupId>com.pkrss.server</groupId>
-		<artifactId>microsrv-parent</artifactId>
+		<artifactId>pkrss-microsrv-parent</artifactId>
 		<version>0.0.1-SNAPSHOT</version>
 		<relativePath>..</relativePath>
 	</parent>

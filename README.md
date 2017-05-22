@@ -54,3 +54,7 @@ b.microsrv.docker.pkrss.com 19002                              BServer # user de
 
 1. how to change spring boot cloud config password in this sample project:
    see it in: pkrss-microsrv-config\src\main\resources\bootstrap.yml
+   
+2. some urls
+	
+	http://<eurekaserver>/eureka/apps

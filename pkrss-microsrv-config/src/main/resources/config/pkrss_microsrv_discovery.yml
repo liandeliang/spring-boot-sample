@@ -15,6 +15,8 @@ endpoints:
   health:
     sensitive: false
 eureka:
+  server:
+    enableSelfPreservation: false
   instance:
     hostname: discovery.microsrv.docker.pkrss.com
   client:
