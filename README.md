@@ -18,6 +18,10 @@ $ mvn install
 build with generate docker image:
 $ mvn install -P docker
 
+# prepare
+
+install consul in host: consul.third.docker.pkrss.com
+
 # how to run
 
 $ mvn spring-boot:run

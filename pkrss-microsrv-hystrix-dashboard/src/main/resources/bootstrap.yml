@@ -1,6 +1,6 @@
 spring:
   application:
-    name: pkrss_microsrv_hystrix_dashboard
+    name: pkrss-microsrv-hystrix-dashboard
   cloud:
     config:
       uri: http://username:password@config.microsrv.docker.pkrss.com:18001
