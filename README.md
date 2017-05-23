@@ -16,7 +16,7 @@ build without generate docker image:
 $ mvn install
 
 build with generate docker image:  
-$ mvn install -P docker
+$ mvn clean package -D maven.test.skip=true -P docker
 
 # prepare
 
