@@ -61,3 +61,24 @@ $ mvn spring-boot:run
 	
 other drafts:  
 Docker 1.12 Swarm Mode集群实战(第三章): https://sanwen8.cn/p/34e2EJX.html
+Docker 实战（五）：Docker Swarm Mode: http://www.tuicool.com/articles/nUbIn2z
+基于docker1.12创建swarm集群: https://yq.aliyun.com/articles/58886
+
+# run in aliyun 
+
+。。。
+      
+# other docker command
+
+(if is swarm mode, need manager)
+
+list all node:  
+$ docker node ls
+
+list all container:  
+$ docker ps
+
+in docker container run command:  
+$ docker exec -it mynginx /bin/sh /root/runoob.sh  
+$ docker exec -it $(docker ps | grep pkrss-microsrv-b | awk {'print $1'}) ping consul.local  
+
