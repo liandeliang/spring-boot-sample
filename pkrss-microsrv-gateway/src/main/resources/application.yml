@@ -3,8 +3,8 @@ server:
 
 sidecar:
   port: 18003
-  hostname: consul.microsrv.docker.pkrss.com
-  health-uri: http://consul.microsrv.docker.pkrss.com:18003/health.json
+  hostname: pkrss-microsrv-consul
+  health-uri: http://pkrss-microsrv-consul:18003/health.json
 
 endpoints:
   restart:
@@ -22,7 +22,7 @@ eureka:
     registerWithEureka: true
     fetchRegistry: true
     serviceUrl:
-      defaultZone: http://discovery.microsrv.docker.pkrss.com:18002/eureka/
+      defaultZone: http://pkrss-microsrv-discovery:18002/eureka/
 
 ribbon:
   eureka:

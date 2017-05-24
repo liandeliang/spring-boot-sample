@@ -3,4 +3,4 @@ spring:
     name: pkrss-microsrv-consul
   cloud:
     consul:
-        host: consul.third.docker.pkrss.com
+        host: consul-default

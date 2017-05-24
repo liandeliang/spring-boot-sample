@@ -21,7 +21,7 @@ eureka:
     registerWithEureka: true
     fetchRegistry: false
     serviceUrl:
-      defaultZone: http://discovery.microsrv.docker.pkrss.com:18002/eureka/
+      defaultZone: http://pkrss-microsrv-discovery:18002/eureka/
 
 spring: 
   profiles: 

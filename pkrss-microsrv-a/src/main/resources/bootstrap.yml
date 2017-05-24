@@ -3,6 +3,6 @@ spring:
     name: pkrss-microsrv-a
   cloud:
     config:
-      uri: http://username:password@config.microsrv.docker.pkrss.com:18001
+      uri: http://username:password@pkrss-microsrv-config:18001
 encrypt:
   failOnError: false

@@ -3,12 +3,12 @@ server:
 
 eureka:
   instance:
-    hostname: discovery.microsrv.docker.pkrss.com
+    hostname: pkrss-microsrv-discovery
   client: # Not a client, don't register with yourself
     registerWithEureka: false
     fetchRegistry: false
     serviceUrl:
-      defaultZone: http://discovery.microsrv.docker.pkrss.com:${server.port}/eureka/
+      defaultZone: http://pkrss-microsrv-discovery:${server.port}/eureka/
       # defaultZone: http://user:password@discovery.microsrv.docker.pkrss.com:${server.port}/eureka/
 
 # spring.cloud.config.discovery.enabled: true
