@@ -82,3 +82,13 @@ in docker container run command:
 $ docker exec -it mynginx /bin/sh /root/runoob.sh  
 $ docker exec -it $(docker ps | grep pkrss-microsrv-b | awk {'print $1'}) ping consul.local  
 
+# china aliyun docker accelerate
+docker for windows: Setting > Daemon > Registry mirrors: add: xxxxxx.mirror.aliyuncs.com
+
+# create new node
+see: https://docs.docker.com/machine/drivers/hyper-v/
+in china, download https://github.com/boot2docker/boot2docker/releases/download/v17.05.0-ce/boot2docker.iso save to %userprofile%\.docker\machine\cache\boot2docker.iso
+docker-machine create -d hyperv --hyperv-virtual-switch "DockerNAT" --hyperv-disk-size "5000" --hyperv-memory "1024" manager
+see: 一步步创建第一个Docker App —— 2. 创建 Docker化 主机 http://www.cnblogs.com/zhxshseu/p/011245978fc443fbc6f273ad7e22ed7c.html
+
+
