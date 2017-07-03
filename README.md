@@ -16,7 +16,7 @@ docker for windows: Setting > Daemon > Registry mirrors: add: xxxxxx.mirror.aliy
 # preprare
 
 i used windows 10, install "consul" and "docker for windows".
-my host network ip is 188.199.1.254.
+my host network ip is 188.199.1.228. so my host windows add one host record: hosts.local => 188.199.1.228
 
 # create new node
 
@@ -26,33 +26,63 @@ Microsoft Hyper-V:https://docs.docker.com/machine/drivers/hyper-v/
 Install and Create a Docker Swarm: https://docs.docker.com/swarm/install-w-machine/
 
 in china, download https://github.com/boot2docker/boot2docker/releases/download/v17.05.0-ce/boot2docker.iso save to %userprofile%\.docker\machine\cache\boot2docker.iso
+in china, docker-machine create --engine-registry-mirror "https://k4qqsfsl.mirror.aliyuncs.com"
+or: sudo sed -i "s|EXTRA_ARGS='|EXTRA_ARGS='--registry-mirror=https://k4qqsfsl.mirror.aliyuncs.com |g" /var/lib/boot2docker/profile
 
-PS C:\WINDOWS\system32> docker-machine create -d hyperv --hyperv-virtual-switch "Primary Virtual Switch" --hyperv-disk-size "5000" --hyperv-memory "1024" manager1
+create hypver private network switcher: "Private".
 
-PS C:\WINDOWS\system32> docker-machine ssh manager1
-docker@manager1:~$ docker run -d -h manager1 -v /data:/data -p 8300:8300 -p 8301:8301 -p 8302:8302 -p 8400:8400 -p 8500:8500 -p 8600:8600 consul
-
-PS C:\WINDOWS\system32> docker-machine create -d hyperv --hyperv-virtual-switch "Primary Virtual Switch" --hyperv-disk-size "2000" --hyperv-memory "512" worker1
-PS C:\WINDOWS\system32> docker-machine create -d hyperv --hyperv-virtual-switch "Primary Virtual Switch" --hyperv-disk-size "2000" --hyperv-memory "512" worker2
+PS C:\WINDOWS\system32> docker-machine create -d hyperv --hyperv-virtual-switch "Primary Virtual Switch" --hyperv-disk-size "2000" --hyperv-memory "512" local
+PS C:\WINDOWS\system32> docker-machine stop local
+add virtual network card on hypver-machine "local", bind network switcer: "Private". And change network card "Private", disable ipv6 checkbox option, change ipv4: 192.169.1.1 255.255.255.0. disable: Hypver-V Extensible Virtual Switch, Microsoft网络适配器多路传送器协议.
+PS C:\WINDOWS\system32> docker-machine start local
 
 PS C:\WINDOWS\system32> docker-machine ls
-NAME       ACTIVE   DRIVER   STATE     URL                        SWARM   DOCKER
-manager1   -        hyperv   Running   tcp://188.199.1.131:2376           Unknown
-worker1    -        hyperv   Running   tcp://188.199.1.78:2376            v17.05.0-ce
-worker2    -        hyperv   Running   tcp://188.199.1.99:2376            Unknown
+   NAME    ACTIVE   DRIVER   STATE     URL                                     SWARM   DOCKER        ERRORS
+   local   -        hyperv   Running   tcp://[fe80::215:5dff:fe64:3e43]:2376           v17.03.2-ce
+PS C:\WINDOWS\system32> docker-machine ssh local
+docker@local:~$ docker run -v /data:/data -d -p 8300:8300 -p 8301:8301 -p 8302:8302 -p 8400:8400 -p 8500:8500 -p 8600:8600 --name=consul consul agent -bootstrap -server -advertise 172.17.0.1 -datacenter local
 
-# create swarm mode
+PS C:\WINDOWS\system32> docker run swarm create
+   Unable to find image 'swarm:latest' locally
+   latest: Pulling from library/swarm
+   ebe0176dcf9a: Pull complete
+   19f771faa982: Pull complete
+   902eeedf931a: Pull complete
+   Digest: sha256:815fc8fd4617d866e1256999c2c0a55cc8f377f3dade26c3edde3f0543a70c04
+   Status: Downloaded newer image for swarm:latest
+   e0f9cec17f2f36404768fb50138d469d
+the last line "e0f9cec17f2f36404768fb50138d469d" is swarm token.
+        
+PS C:\WINDOWS\system32> docker-machine create -d hyperv --hyperv-virtual-switch "Primary Virtual Switch" --hyperv-disk-size "3000" --hyperv-memory "1024" --swarm --swarm-master --swarm-discovery consul://172.17.0.1/swarm master1
+PS C:\WINDOWS\system32> docker-machine create -d hyperv --hyperv-virtual-switch "Primary Virtual Switch" --hyperv-disk-size "3000" --hyperv-memory "1024" --swarm --swarm-discovery consul://172.17.0.1/swarm worker1
+PS C:\WINDOWS\system32> docker-machine create -d hyperv --hyperv-virtual-switch "Primary Virtual Switch" --hyperv-disk-size "3000" --hyperv-memory "1024" --swarm --swarm-discovery consul://172.17.0.1/swarm worker2
 
-PS C:\WINDOWS\system32> docker-machine ssh manager1
-docker@manager1:~$ docker run swarm create
-it return token: aad9ec75e94b2d37153369c60c796f34,remember this token.
-docker@manager1:~$ exit
-PS C:\WINDOWS\system32> docker-machine create -d virtualbox --swarm --swarm-master --swarm-discovery token://fe0cc96a72cf04dba8c1c4aa79536ec3 swarm-master
+PS C:\WINDOWS\system32> docker-machine ssh master1
+docker@master1:~$ docker run -v /data:/data -d -h master1 -p 8300:8300 -p 8301:8301 -p 8302:8302 -p 8400:8400 -p 8500:8500 -p 8600:53/udp --restart=always --name=consul consul -server -advertise 188.199.1.62 -join 188.199.1.89
+or your can setup swarm mode from normal machine:
+docker@master1:~$ docker run -d -p 4000:4000 swarm manage -H :4000 --replication --advertise 188.199.1.62:4000 consul://188.199.1.62:8500
+4c5717a95711055a73b18d07b9a4c50fb076a24c1238c24fbba395b0da7ba004
+ 
+PS C:\WINDOWS\system32> docker-machine ssh worker1
+docker@worker1:~$ docker run -v /data:/data -d -h worker1 -p 8300:8300 -p 8301:8301 -p 8302:8302 -p 8400:8400 -p 8500:8500 -p 8600:53/udp --restart=always --name=consul consul -server -advertise 188.199.1.89 -join 188.199.1.89
+or your can setup swarm mode from normal machine:
+docker@worker1:~$ docker run -d -p 4000:4000 swarm manage -H :4000 --replication --advertise 188.199.1.89:4000 consul://188.199.1.89:8500
+docker@worker1:~$ docker swarm join --token SWMTKN-1-5j8loljyo9dd88962q9w1olju2vamo3oysxx77lnssmdccmv2z-a2bmh1lcmn8vcnkdq71t1ngya 188.199.1.62:2377
 
-swarm join --discovery consul://consulhost01/swarm \
-# This can be an internal IP as long as the other
-# Docker hosts can reach it.
---addr=10.100.199.200:2375
+docker@worker2:~$ docker run -v /data:/data -d -h worker2 -p 8300:8300 -p 8301:8301 -p 8302:8302 -p 8400:8400 -p 8500:8500 -p 8600:53/udp --restart=always --name=consul consul -server -advertise 188.199.1.54 -join 188.199.1.89
+or your can setup swarm mode from normal machine:
+docker@worker1:~$ docker run -d swarm join --token SWMTKN-1-5j8loljyo9dd88962q9w1olju2vamo3oysxx77lnssmdccmv2z-e54qpomvjk3wl6afy4r3ppnxx --advertise=188.199.1.54 consul://188.199.1.54:8500 188.199.1.62:2377
+
+
+NAME      ACTIVE   DRIVER   STATE     URL                       SWARM              DOCKER        ERRORS
+   local     -        hyperv   Running   tcp://188.199.1.89:2376                      v17.05.0-ce
+   master1   -        hyperv   Running   tcp://188.199.1.62:2376   master1 (master)   v17.05.0-ce
+   worker1   -        hyperv   Running   tcp://188.199.1.59:2376   master1            v17.05.0-ce
+   worker2   -        hyperv   Running   tcp://188.199.1.54:2376   master1            v17.05.0-ce
+
+download consul-template from: https://releases.hashicorp.com/consul-template/0.18.5/consul-template_0.18.5_windows_amd64.zip
+
+unzip consul-template_0.7.0_linux_amd64.zip -d /usr/local/bin/
 
 # how to build
 
@@ -104,6 +134,7 @@ Docker 1.12 Swarm Mode集群实战(第三章): https://sanwen8.cn/p/34e2EJX.html
 Docker 实战（五）：Docker Swarm Mode: http://www.tuicool.com/articles/nUbIn2z
 基于docker1.12创建swarm集群: https://yq.aliyun.com/articles/58886
 从零开始部署基于阿里容器云的微服务（consul+registrator+template）(一): http://alice.blog.51cto.com/707092/1896078
+在阿里云容器服务上开发基于Docker的Spring Cloud微服务应用: https://yq.aliyun.com/articles/57265
 
 # run in aliyun 
 
@@ -166,7 +197,6 @@ PS C:\WINDOWS\system32> docker swarm join --token SWMTKN-1-3v50tuig1x58i9ahrbyyc
 for china add aliyun accelerate: other man can skip it:
 PS C:\WINDOWS\system32> docker-machine ssh manager1
 docker@manager1:~$ docker run swarm create
-docker@manager1:~$ sudo sed -i "s|EXTRA_ARGS='|EXTRA_ARGS='--registry-mirror=https://xxxxxxxx.mirror.aliyuncs.com |g" /var/lib/boot2docker/profile
 docker@manager1:~$ exit
 PS C:\WINDOWS\system32> docker-machine manager1
 PS C:\WINDOWS\system32> docker-machine ssh worker1
