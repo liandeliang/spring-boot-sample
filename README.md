@@ -26,12 +26,12 @@ Microsoft Hyper-V:https://docs.docker.com/machine/drivers/hyper-v/
 Install and Create a Docker Swarm: https://docs.docker.com/swarm/install-w-machine/
 
 in china, download https://github.com/boot2docker/boot2docker/releases/download/v17.05.0-ce/boot2docker.iso save to %userprofile%\.docker\machine\cache\boot2docker.iso
-in china, docker-machine create --engine-registry-mirror "https://k4qqsfsl.mirror.aliyuncs.com"
-or: sudo sed -i "s|EXTRA_ARGS='|EXTRA_ARGS='--registry-mirror=https://k4qqsfsl.mirror.aliyuncs.com |g" /var/lib/boot2docker/profile
+in china, docker-machine create --engine-registry-mirror "https://xxxxxxxxx.mirror.aliyuncs.com"
+or: sudo sed -i "s|EXTRA_ARGS='|EXTRA_ARGS='--registry-mirror=https://xxxxxxxxx.mirror.aliyuncs.com |g" /var/lib/boot2docker/profile
 
 create hypver private network switcher: "Private".
 
-PS C:\WINDOWS\system32> docker-machine create -d hyperv --hyperv-virtual-switch "Primary Virtual Switch" --hyperv-disk-size "2000" --hyperv-memory "512" --engine-registry-mirror "https://k4qqsfsl.mirror.aliyuncs.com" local
+PS C:\WINDOWS\system32> docker-machine create -d hyperv --hyperv-virtual-switch "Primary Virtual Switch" --hyperv-disk-size "2000" --hyperv-memory "512" local
 
 PS C:\WINDOWS\system32> docker-machine ls
    NAME    ACTIVE   DRIVER   STATE     URL                                     SWARM   DOCKER        ERRORS
@@ -39,9 +39,9 @@ PS C:\WINDOWS\system32> docker-machine ls
 PS C:\WINDOWS\system32> docker-machine ssh local
 docker@local:~$ docker run --restart=always -d -v /data:/data -p 8300:8300 -p 8301:8301 -p 8301:8301/udp -p 8302:8302 -p 8302:8302/udp -p 8400:8400 -p 8500:8500 -p 8600:8600 consul agent -server -bootstrap-expect 2 -ui -client 0.0.0.0 -advertise 192.168.3.131 -node=local
         
-PS C:\WINDOWS\system32> docker-machine create -d hyperv --hyperv-virtual-switch "Primary Virtual Switch" --hyperv-disk-size "3000" --hyperv-memory "1024" --swarm --swarm-master --swarm-discovery consul://192.168.3.131/swarm --engine-registry-mirror "https://k4qqsfsl.mirror.aliyuncs.com" master1
-PS C:\WINDOWS\system32> docker-machine create -d hyperv --hyperv-virtual-switch "Primary Virtual Switch" --hyperv-disk-size "3000" --hyperv-memory "1024" --swarm --swarm-discovery consul://192.168.3.131/swarm --engine-registry-mirror "https://k4qqsfsl.mirror.aliyuncs.com" worker1
-PS C:\WINDOWS\system32> docker-machine create -d hyperv --hyperv-virtual-switch "Primary Virtual Switch" --hyperv-disk-size "3000" --hyperv-memory "1024" --swarm --swarm-discovery consul://192.168.3.131/swarm --engine-registry-mirror "https://k4qqsfsl.mirror.aliyuncs.com" worker2
+PS C:\WINDOWS\system32> docker-machine create -d hyperv --hyperv-virtual-switch "Primary Virtual Switch" --hyperv-disk-size "3000" --hyperv-memory "1024" --swarm --swarm-master --swarm-discovery consul://192.168.3.131/swarm master1
+PS C:\WINDOWS\system32> docker-machine create -d hyperv --hyperv-virtual-switch "Primary Virtual Switch" --hyperv-disk-size "3000" --hyperv-memory "1024" --swarm --swarm-discovery consul://192.168.3.131/swarm worker1
+PS C:\WINDOWS\system32> docker-machine create -d hyperv --hyperv-virtual-switch "Primary Virtual Switch" --hyperv-disk-size "3000" --hyperv-memory "1024" --swarm --swarm-discovery consul://192.168.3.131/swarm worker2
 
 PS C:\WINDOWS\system32> docker-machine ssh master1
 docker@master1:~$ docker swarm init --advertise-addr 192.168.3.132
