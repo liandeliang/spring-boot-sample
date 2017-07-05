@@ -36,7 +36,9 @@
 		<project.sourceEncoding>UTF-8</project.sourceEncoding>
 		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <docker.image.prefix>springio</docker.image.prefix>
-        <docker.plugin.version>0.4.13</docker.plugin.version>
+        <docker.plugin.version>1.0.0</docker.plugin.version>
+        <docker.repostory>192.168.3.131:5000</docker.repostory>
+        <DOCKER_HOST>tcp://192.168.3.131:2376</DOCKER_HOST>
 	</properties>
 
 	
@@ -59,6 +61,54 @@
 	                <encoding>UTF-8</encoding>  
 	            </configuration>  
 	        </plugin>  
+	        <plugin>
+               <groupId>com.spotify</groupId>
+               <artifactId>docker-maven-plugin</artifactId>
+               <version>${docker.plugin.version}</version>
+               
+               <configuration>
+                    <imageName>${project.artifactId}</imageName>
+                    <dockerDirectory>${project.basedir}/src/main/docker</dockerDirectory>
+                   <resources>
+                       <resource>
+                           <targetPath>/</targetPath>
+                           <directory>${project.basedir}/src/main/docker</directory>
+                           <include>Dockerfile</include>
+                       </resource>
+                   </resources>
+                </configuration>
+                
+                <executions>
+                	<execution>
+				      <id>build-image</id>
+				      <phase>package</phase>
+				      <goals>
+				        <goal>build</goal>
+				      </goals>
+				    </execution>
+				    <execution>
+				      <id>tag-image</id>
+				      <phase>package</phase>
+				      <goals>
+				        <goal>tag</goal>
+				      </goals>
+	                  <configuration>
+	                  	<image>${project.artifactId}</image>
+	                    <newName>${docker.repostory}/${project.artifactId}</newName>
+	                  </configuration>
+				    </execution>
+				    <execution>
+				      <id>push-image</id>
+				      <phase>deploy</phase>
+				      <goals>
+				        <goal>push</goal>
+				      </goals>
+				      <configuration>
+				        <imageName>${docker.repostory}/${project.artifactId}</imageName>
+				      </configuration>
+				    </execution>
+               </executions>
+            </plugin>
 	    </plugins>  
 	</build>  
 

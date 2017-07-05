@@ -31,30 +31,49 @@ or: sudo sed -i "s|EXTRA_ARGS='|EXTRA_ARGS='--registry-mirror=https://xxxxxxxxx.
 
 create hypver private network switcher: "Private".
 
-PS C:\WINDOWS\system32> docker-machine create -d hyperv --hyperv-virtual-switch "Primary Virtual Switch" --hyperv-disk-size "2000" --hyperv-memory "512" local
+PS C:\WINDOWS\system32> docker-machine create -d hyperv --hyperv-virtual-switch "Primary Virtual Switch" --hyperv-disk-size "10000" --hyperv-memory "512" --hyperv-static-macaddress "00-15-5D-64-3E-56" local
 
 PS C:\WINDOWS\system32> docker-machine ls
    NAME    ACTIVE   DRIVER   STATE     URL                                     SWARM   DOCKER        ERRORS
    local   -        hyperv   Running   tcp://192.168.3.131:2376           v17.03.2-ce
 PS C:\WINDOWS\system32> docker-machine ssh local
 docker@local:~$ docker run --restart=always -d -v /data:/data -p 8300:8300 -p 8301:8301 -p 8301:8301/udp -p 8302:8302 -p 8302:8302/udp -p 8400:8400 -p 8500:8500 -p 8600:8600 consul agent -server -bootstrap-expect 2 -ui -client 0.0.0.0 -advertise 192.168.3.131 -node=local
-        
-PS C:\WINDOWS\system32> docker-machine create -d hyperv --hyperv-virtual-switch "Primary Virtual Switch" --hyperv-disk-size "3000" --hyperv-memory "1024" --swarm --swarm-master --swarm-discovery consul://192.168.3.131/swarm master1
-PS C:\WINDOWS\system32> docker-machine create -d hyperv --hyperv-virtual-switch "Primary Virtual Switch" --hyperv-disk-size "3000" --hyperv-memory "1024" --swarm --swarm-discovery consul://192.168.3.131/swarm worker1
-PS C:\WINDOWS\system32> docker-machine create -d hyperv --hyperv-virtual-switch "Primary Virtual Switch" --hyperv-disk-size "3000" --hyperv-memory "1024" --swarm --swarm-discovery consul://192.168.3.131/swarm worker2
+
+** install private registry responsity in local **  
+
+$ docker pull registry  
+$ docker run --restart=always -d -p 5000:5000 -v /opt/data/registry:/tmp/registry registry
+
+if other machine not create with --engine-insecure-registry "192.168.3.131:5000",then can called:
+$ sudo sed -i "s|EXTRA_ARGS='|EXTRA_ARGS='--insecure-registry "192.168.3.131:5000" |g" /var/lib/boot2docker/profile
+
+** download java:8 and push to local responsity **
+
+$ docker pull java:8
+$ docker tag java:8 192.168.3.131:5000/java
+$ docker push 192.168.3.131:5000/java
+
+Then in docker for windows, 
+
+PS C:\WINDOWS\system32> docker-machine create -d hyperv --hyperv-virtual-switch "Primary Virtual Switch" --hyperv-disk-size "3000" --hyperv-memory "1024" --swarm --swarm-master --swarm-discovery consul://192.168.3.131/swarm --engine-insecure-registry "192.168.3.131:5000" --hyperv-static-macaddress "00-15-5D-64-3E-57" master1
+PS C:\WINDOWS\system32> docker-machine create -d hyperv --hyperv-virtual-switch "Primary Virtual Switch" --hyperv-disk-size "3000" --hyperv-memory "1024" --swarm --swarm-discovery consul://192.168.3.131/swarm --engine-insecure-registry "192.168.3.131:5000" --hyperv-static-macaddress "00-15-5D-64-3E-58" worker1
+PS C:\WINDOWS\system32> docker-machine create -d hyperv --hyperv-virtual-switch "Primary Virtual Switch" --hyperv-disk-size "3000" --hyperv-memory "1024" --swarm --swarm-discovery consul://192.168.3.131/swarm --engine-insecure-registry "192.168.3.131:5000" --hyperv-static-macaddress "00-15-5D-64-3E-59" worker2
 
 PS C:\WINDOWS\system32> docker-machine ssh master1
 docker@master1:~$ docker swarm init --advertise-addr 192.168.3.132
   To add a worker to this swarm, run the following command:
-    docker swarm join --token SWMTKN-1-1lo5eozjzzci74e8ln2hlsgec0mhue265hatvddyrb2cls1hcv-2y2r7rpj05bgcn6zcr7mnw9aq 192.168.3.132:2377
+    docker swarm join --token xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx 192.168.3.132:2377
   To add a manager to this swarm, run 'docker swarm join-token manager' and follow the instructions.
-docker@master1:~$ docker run --restart=always -d -v /data:/data -p 8300:8300 -p 8301:8301 -p 8301:8301/udp -p 8302:8302 -p 8302:8302/udp -p 8400:8400 -p 8500:8500 -p 8600:8600 consul agent -server -ui -client 0.0.0.0 -advertise 192.168.3.132 -node=master1 -join 192.168.3.131
+  
+docker@master1:~$ docker service create --replicas 1 --name consul-default -p 8300:8300 -p 8301:8301 -p 8301:8301/udp -p 8302:8302 -p 8302:8302/udp -p 8400:8400 -p 8500:8500 -p 8600:8600 consul agent -server -bootstrap-expect 2 -ui -client 0.0.0.0 -advertise 192.168.3.131 -node=local
+not run: 
+docker@master1:~$ ~~ docker run --restart=always -d -v /data:/data -p 8300:8300 -p 8301:8301 -p 8301:8301/udp -p 8302:8302 -p 8302:8302/udp -p 8400:8400 -p 8500:8500 -p 8600:8600 consul agent -server -ui -client 0.0.0.0 -advertise 192.168.3.132 -node=master1 -join 192.168.3.131 ~~
  
 PS C:\WINDOWS\system32> docker-machine ssh worker1
-docker@worker1:~$ docker swarm join --token SWMTKN-1-4zq9qr1zi9ip15jqtwp5k6quroupjmbp9c4ukymdipgjup24re-56ehxowuw1wd046bcodijg3ew 192.168.1.132:2377
+docker@worker1:~$ docker swarm join --token xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx 192.168.1.132:2377
 
 PS C:\WINDOWS\system32> docker-machine ssh worker2
-docker@worker2:~$ docker swarm join --token SWMTKN-1-4zq9qr1zi9ip15jqtwp5k6quroupjmbp9c4ukymdipgjup24re-56ehxowuw1wd046bcodijg3ew 192.168.1.132:2377
+docker@worker2:~$ docker swarm join --token xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx 192.168.1.132:2377
 
 PS C:\WINDOWS\system32> docker-machine env master1
 Error checking TLS connection: Error checking and/or regenerating the certs: There was an error validating certificates
@@ -63,13 +82,27 @@ You can attempt to regenerate them using 'docker-machine regenerate-certs [name]
 Be advised that this will trigger a Docker daemon restart which might stop running containers.
 PS C:\WINDOWS\system32> docker-machine regenerate-certs master1 -f
 
+# web ui
+
+consul: http://192.168.3.131:8500
+
 # how to build
 
-build without generate docker image:  
-$ mvn install
+build without docker generator:
+PS> mvn install -D skipDocker
 
 build with generate docker image:  
-$ mvn clean package -D maven.test.skip=true -P docker
+PS> docker-machine env local | Invoke-Expression
+PS> mvn clean package docker:build -D pushImage
+
+in 192.168.3.131:
+$ docker push 192.168.3.131:5000/pkrss-microsrv-consul
+in 192.168.3.132:
+$ docker pull 192.168.3.131:5000/pkrss-microsrv-consul
+$ docker run -p 18003:18003 192.168.3.131:5000/pkrss-microsrv-consul
+run service
+$ docker service create --replicas 1 --name pkrss-microsrv-consul -p 18003:18003 192.168.3.131:5000/pkrss-microsrv-consul
+
 
 # how to run
 
@@ -114,6 +147,8 @@ Docker 实战（五）：Docker Swarm Mode: http://www.tuicool.com/articles/nUbI
 基于docker1.12创建swarm集群: https://yq.aliyun.com/articles/58886
 从零开始部署基于阿里容器云的微服务（consul+registrator+template）(一): http://alice.blog.51cto.com/707092/1896078
 在阿里云容器服务上开发基于Docker的Spring Cloud微服务应用: https://yq.aliyun.com/articles/57265
+docker-maven-plugin: https://github.com/spotify/docker-maven-plugin
+使用docker-maven-plugin插件实现Docker构建并提交到私有仓库: http://www.jianshu.com/p/c435ea4c0cc0
 
 # run in aliyun 
 
@@ -135,7 +170,7 @@ $ docker exec -it $(docker ps | grep pkrss-microsrv-b | awk {'print $1'}) ping c
 
 # other draft
 
-S C:\WINDOWS\system32> docker-machine.exe env worker2
+PS C:\WINDOWS\system32> docker-machine.exe env worker2
 $Env:DOCKER_TLS_VERIFY = "1"
 $Env:DOCKER_HOST = "tcp://188.199.1.68:2376"
 $Env:DOCKER_CERT_PATH = "C:\Users\liand\.docker\machine\machines\worker2"
