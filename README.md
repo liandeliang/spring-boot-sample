@@ -52,9 +52,9 @@ $ docker push 192.168.3.131:5000/java
 
 Then in docker for windows, 
 
-PS C:\WINDOWS\system32> docker-machine create -d hyperv --hyperv-virtual-switch "Primary Virtual Switch" --hyperv-disk-size "3000" --hyperv-memory "1024" --swarm --swarm-master --swarm-discovery consul://192.168.3.131/swarm --engine-insecure-registry "192.168.3.131:5000" --hyperv-static-macaddress "00-15-5D-64-3E-57" master1
-PS C:\WINDOWS\system32> docker-machine create -d hyperv --hyperv-virtual-switch "Primary Virtual Switch" --hyperv-disk-size "3000" --hyperv-memory "1024" --swarm --swarm-discovery consul://192.168.3.131/swarm --engine-insecure-registry "192.168.3.131:5000" --hyperv-static-macaddress "00-15-5D-64-3E-58" worker1
-PS C:\WINDOWS\system32> docker-machine create -d hyperv --hyperv-virtual-switch "Primary Virtual Switch" --hyperv-disk-size "3000" --hyperv-memory "1024" --swarm --swarm-discovery consul://192.168.3.131/swarm --engine-insecure-registry "192.168.3.131:5000" --hyperv-static-macaddress "00-15-5D-64-3E-59" worker2
+PS C:\WINDOWS\system32> docker-machine create -d hyperv --hyperv-virtual-switch "Primary Virtual Switch" --hyperv-disk-size "10000" --hyperv-memory "1024" --swarm --swarm-master --swarm-discovery consul://192.168.3.131/swarm --engine-insecure-registry "192.168.3.131:5000" --hyperv-static-macaddress "00-15-5D-64-3E-57" master1
+PS C:\WINDOWS\system32> docker-machine create -d hyperv --hyperv-virtual-switch "Primary Virtual Switch" --hyperv-disk-size "10000" --hyperv-memory "1024" --swarm --swarm-discovery consul://192.168.3.131/swarm --engine-insecure-registry "192.168.3.131:5000" --hyperv-static-macaddress "00-15-5D-64-3E-58" worker1
+PS C:\WINDOWS\system32> docker-machine create -d hyperv --hyperv-virtual-switch "Primary Virtual Switch" --hyperv-disk-size "10000" --hyperv-memory "1024" --swarm --swarm-discovery consul://192.168.3.131/swarm --engine-insecure-registry "192.168.3.131:5000" --hyperv-static-macaddress "00-15-5D-64-3E-59" worker2
 
 PS C:\WINDOWS\system32> docker-machine ssh master1
 docker@master1:~$ docker swarm init --advertise-addr 192.168.3.132
@@ -91,6 +91,7 @@ PS C:\WINDOWS\system32> docker-machine regenerate-certs master1 -f
 
 consul: http://192.168.3.132:8500 http://192.168.3.131:8500 
 eurake: http://192.168.3.132:18002
+hystrix dashboard: http://192.168.3.132:18005/
 
 # how to build
 
@@ -103,16 +104,24 @@ PS> mvn clean package docker:build -D pushImageTags
 
 in 192.168.3.132:
 $ docker push 192.168.3.131:5000/pkrss-microsrv-consul
+$ docker push 192.168.3.131:5000/pkrss-microsrv-discovery
+$ docker push 192.168.3.131:5000/pkrss-microsrv-config
+$ docker push 192.168.3.131:5000/pkrss-microsrv-gateway
+$ docker push 192.168.3.131:5000/pkrss-microsrv-hystrix-dashboard
+$ docker push 192.168.3.131:5000/pkrss-microsrv-a
+$ docker push 192.168.3.131:5000/pkrss-microsrv-b 
 in 192.168.3.133 or 192.168.3.133 or skip this step:
 $ docker pull 192.168.3.131:5000/pkrss-microsrv-consul
+...
+
 run service
-$ docker service create --replicas 1 --name pkrss-microsrv-consul --network my-net -p 18003:18003 pkrss-microsrv-consul
-$ docker service create --replicas 1 --name pkrss-microsrv-discovery --network my-net -p 18002:18002 pkrss-microsrv-discovery
-$ docker service create --replicas 1 --name pkrss_microsrv_config --network my-net -p 18001:18001 pkrss_microsrv_config
-$ docker service create --replicas 1 --name pkrss_microsrv_gateway --network my-net -p 18004:18004 pkrss_microsrv_gateway
-$ docker service create --replicas 1 --name pkrss_microsrv_hystrix_dashboard --network my-net -p 18005:18005 pkrss_microsrv_hystrix_dashboard
-$ docker service create --replicas 1 --name pkrss-microsrv-a --network my-net -p 19001:19001 pkrss-microsrv-a
-$ docker service create --replicas 1 --name pkrss-microsrv-b --network my-net -p 18002:19002 pkrss-microsrv-b 
+$ docker service create --replicas 1 --name pkrss-microsrv-consul --network my-net -p 18003:18003 18001:18001 192.168.3.131:5000/pkrss-microsrv-consul
+$ docker service create --replicas 1 --name pkrss-microsrv-discovery --network my-net -p 18002:18002 18001:18001 192.168.3.131:5000/pkrss-microsrv-discovery
+$ docker service create --replicas 1 --name pkrss_microsrv_config --network my-net -p 18001:18001 192.168.3.131:5000/pkrss-microsrv-config
+$ docker service create --replicas 1 --name pkrss-microsrv-gateway --network my-net -p 18004:18004 192.168.3.131:5000/pkrss-microsrv-gateway
+$ docker service create --replicas 1 --name pkrss-microsrv-hystrix-dashboard --network my-net -p 18005:18005 192.168.3.131:5000/pkrss-microsrv-hystrix-dashboard
+$ docker service create --replicas 1 --name pkrss-microsrv-a --network my-net -p 19001:19001 192.168.3.131:5000/pkrss-microsrv-a
+$ docker service create --replicas 1 --name pkrss-microsrv-b --network my-net -p 19002:19002 192.168.3.131:5000/pkrss-microsrv-b 
 
 # how to run
 
@@ -124,7 +133,7 @@ $ ~~mvn spring-boot:run~~
 
 ' if your want debug in sts, and some service run in docker:
 ' 192.168.x.x is your local network ip, ex 192.168.3.132  
-192.168.3.132 consul pkrss_microsrv_consul pkrss_microsrv_config pkrss_microsrv_discovery pkrss_microsrv_gateway pkrss_microsrv_hystrix_dashboard pkrss-microsrv-a pkrss-microsrv-b 
+192.168.3.132 consul pkrss_microsrv_consul pkrss-microsrv-discovery pkrss-microsrv-config pkrss-microsrv-discovery pkrss-microsrv-gateway pkrss-microsrv-hystrix-dashboard pkrss-microsrv-a pkrss-microsrv-b
 
 ** here is port table **
 
@@ -135,7 +144,7 @@ $ ~~mvn spring-boot:run~~
 | pkrss_microsrv_discovery | 18002 | spring cloud service discovery |
 | pkrss_microsrv_consul | 18003 | spring cloud ??? (dns and profile?, i not sure) |
 | pkrss_microsrv_gateway | 18004 | spring api gateway |
-| pkrss_microsrv_hystrix_dashboard | 18005 | spring boot hystrix background monitor server |
+| pkrss-microsrv-hystrix-dashboard | 18005 | spring boot hystrix background monitor server |
 | pkrss-microsrv-a | 19001 | user demo 1 |
 | pkrss-microsrv-b | 19002 | user demo 2 |
 
