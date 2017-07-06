@@ -179,7 +179,7 @@ delete consul service:
 $ docker service rm $(docker service ls | grep consul | awk '{print $1}')
 
 create service on worker machine:
-~ $ docker service create --name foo6 --constraint="node.role == worker" --network foo alpine sleep 999999
+$ docker service create --name foo6 --constraint="node.role == worker" --network foo alpine sleep 999999
 
 
 # other docker command
