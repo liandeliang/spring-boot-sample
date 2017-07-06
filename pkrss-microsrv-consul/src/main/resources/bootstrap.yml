@@ -3,4 +3,4 @@ spring:
     name: pkrss-microsrv-consul
   cloud:
     consul:
-        host: consul-default
+        host: consul

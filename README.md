@@ -16,7 +16,6 @@ docker for windows: Setting > Daemon > Registry mirrors: add: xxxxxx.mirror.aliy
 # preprare
 
 i used windows 10, install "consul" and "docker for windows".
-my host network ip is 188.199.1.228. so my host windows add one host record: hosts.local => 188.199.1.228
 
 # create new node
 
@@ -29,15 +28,13 @@ in china, download https://github.com/boot2docker/boot2docker/releases/download/
 in china, docker-machine create --engine-registry-mirror "https://xxxxxxxxx.mirror.aliyuncs.com"
 or: sudo sed -i "s|EXTRA_ARGS='|EXTRA_ARGS='--registry-mirror=https://xxxxxxxxx.mirror.aliyuncs.com |g" /var/lib/boot2docker/profile
 
-create hypver private network switcher: "Private".
-
 PS C:\WINDOWS\system32> docker-machine create -d hyperv --hyperv-virtual-switch "Primary Virtual Switch" --hyperv-disk-size "10000" --hyperv-memory "512" --hyperv-static-macaddress "00-15-5D-64-3E-56" local
 
 PS C:\WINDOWS\system32> docker-machine ls
    NAME    ACTIVE   DRIVER   STATE     URL                                     SWARM   DOCKER        ERRORS
    local   -        hyperv   Running   tcp://192.168.3.131:2376           v17.03.2-ce
 PS C:\WINDOWS\system32> docker-machine ssh local
-docker@local:~$ docker run --restart=always -d -v /data:/data -p 8300:8300 -p 8301:8301 -p 8301:8301/udp -p 8302:8302 -p 8302:8302/udp -p 8400:8400 -p 8500:8500 -p 8600:8600 consul agent -server -bootstrap-expect 2 -ui -client 0.0.0.0 -advertise 192.168.3.131 -node=local
+docker@local:~$ docker run --restart=always -d -v /data:/data -p 8300:8300 -p 8301:8301 -p 8301:8301/udp -p 8302:8302 -p 8302:8302/udp -p 8400:8400 -p 8500:8500 -p 8600:8600 consul agent -server -bootstrap-expect 1 -ui -client 0.0.0.0 -advertise 192.168.3.131 -node=local
 
 ** install private registry responsity in local **  
 
@@ -64,17 +61,25 @@ docker@master1:~$ docker swarm init --advertise-addr 192.168.3.132
   To add a worker to this swarm, run the following command:
     docker swarm join --token xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx 192.168.3.132:2377
   To add a manager to this swarm, run 'docker swarm join-token manager' and follow the instructions.
+
+becuase boot2docker default overlay network subnet problem,so we need create our subnet:
+docker@master1:~$ docker network create --driver overlay my-net
   
-docker@master1:~$ docker service create --replicas 1 --name consul-default -p 8300:8300 -p 8301:8301 -p 8301:8301/udp -p 8302:8302 -p 8302:8302/udp -p 8400:8400 -p 8500:8500 -p 8600:8600 consul agent -server -bootstrap-expect 2 -ui -client 0.0.0.0 -advertise 192.168.3.131 -node=local
+docker@master1:~$ docker service create --replicas 1 --name consul --network my-net -p 8300:8300 -p 8301:8301 -p 8301:8301/udp -p 8302:8302 -p 8302:8302/udp -p 8400:8400 -p 8500:8500 -p 8600:8600 consul agent -server -bootstrap-expect 1 -ui -client 0.0.0.0 -advertise 192.168.3.132 -node=swarm1
+
+
 not run: 
 docker@master1:~$ ~~ docker run --restart=always -d -v /data:/data -p 8300:8300 -p 8301:8301 -p 8301:8301/udp -p 8302:8302 -p 8302:8302/udp -p 8400:8400 -p 8500:8500 -p 8600:8600 consul agent -server -ui -client 0.0.0.0 -advertise 192.168.3.132 -node=master1 -join 192.168.3.131 ~~
  
+join with manager.
 PS C:\WINDOWS\system32> docker-machine ssh worker1
 docker@worker1:~$ docker swarm join --token xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx 192.168.1.132:2377
 
+join with manager.
 PS C:\WINDOWS\system32> docker-machine ssh worker2
 docker@worker2:~$ docker swarm join --token xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx 192.168.1.132:2377
 
+if your change ip,then regenerate cert,other skip bellow stop:
 PS C:\WINDOWS\system32> docker-machine env master1
 Error checking TLS connection: Error checking and/or regenerating the certs: There was an error validating certificates
 for host "192.168.3.132:2376": x509: certificate is valid for 192.168.3.100, not 192.168.3.132
@@ -84,7 +89,8 @@ PS C:\WINDOWS\system32> docker-machine regenerate-certs master1 -f
 
 # web ui
 
-consul: http://192.168.3.131:8500
+consul: http://192.168.3.132:8500 http://192.168.3.131:8500 
+eurake: http://192.168.3.132:18002
 
 # how to build
 
@@ -92,17 +98,21 @@ build without docker generator:
 PS> mvn install -D skipDocker
 
 build with generate docker image:  
-PS> docker-machine env local | Invoke-Expression
-PS> mvn clean package docker:build -D pushImage
+PS> docker-machine env master1 | Invoke-Expression
+PS> mvn clean package docker:build -D pushImageTags
 
-in 192.168.3.131:
-$ docker push 192.168.3.131:5000/pkrss-microsrv-consul
 in 192.168.3.132:
+$ docker push 192.168.3.131:5000/pkrss-microsrv-consul
+in 192.168.3.133 or 192.168.3.133 or skip this step:
 $ docker pull 192.168.3.131:5000/pkrss-microsrv-consul
-$ docker run -p 18003:18003 192.168.3.131:5000/pkrss-microsrv-consul
 run service
-$ docker service create --replicas 1 --name pkrss-microsrv-consul -p 18003:18003 192.168.3.131:5000/pkrss-microsrv-consul
-
+$ docker service create --replicas 1 --name pkrss-microsrv-consul --network my-net -p 18003:18003 pkrss-microsrv-consul
+$ docker service create --replicas 1 --name pkrss-microsrv-discovery --network my-net -p 18002:18002 pkrss-microsrv-discovery
+$ docker service create --replicas 1 --name pkrss_microsrv_config --network my-net -p 18001:18001 pkrss_microsrv_config
+$ docker service create --replicas 1 --name pkrss_microsrv_gateway --network my-net -p 18004:18004 pkrss_microsrv_gateway
+$ docker service create --replicas 1 --name pkrss_microsrv_hystrix_dashboard --network my-net -p 18005:18005 pkrss_microsrv_hystrix_dashboard
+$ docker service create --replicas 1 --name pkrss-microsrv-a --network my-net -p 19001:19001 pkrss-microsrv-a
+$ docker service create --replicas 1 --name pkrss-microsrv-b --network my-net -p 18002:19002 pkrss-microsrv-b 
 
 # how to run
 
@@ -112,47 +122,56 @@ $ ~~mvn spring-boot:run~~
 
 ** here is hosts profile **
 
-' 192.168.x.x is your local network ip  
-192.168.x.x consul.third.docker.pkrss.com  
-192.168.x.x consul.microsrv.docker.pkrss.com  
-192.168.x.x config.microsrv.docker.pkrss.com  
-192.168.x.x discovery.microsrv.docker.pkrss.com  
-192.168.x.x gateway.microsrv.docker.pkrss.com  
-
+' if your want debug in sts, and some service run in docker:
+' 192.168.x.x is your local network ip, ex 192.168.3.132  
+192.168.3.132 consul pkrss_microsrv_consul pkrss_microsrv_config pkrss_microsrv_discovery pkrss_microsrv_gateway pkrss_microsrv_hystrix_dashboard pkrss-microsrv-a pkrss-microsrv-b 
 
 ** here is port table **
 
-| module     | port      | host     | description                        |
-|:-----------|:--------- |:-------- |:---------------------------------- |
-| consul     | tcp: 8300 8400 8500 8600\n udp:8301 8302 | consul.third.docker.pkrss.com |
-| pkrss_microsrv_config | 18001 | config.microsrv.docker.pkrss.com | spring cloud config server |
-| pkrss_microsrv_discovery | 18002 | discovery.microsrv.docker.pkrss.com  | spring cloud service discovery |
-| pkrss_microsrv_consul | 18003 | consul.microsrv.docker.pkrss.com | spring cloud ??? (dns and profile?, i not sure) |
-| pkrss_microsrv_gateway | 18004 | gateway.microsrv.docker.pkrss.com | spring api gateway |
-| pkrss_microsrv_hystrix_dashboard | 18005 | hystrix_dashboard.microsrv.docker.pkrss.com | spring boot hystrix background monitor server |
-| a.microsrv.docker.pkrss.com | 19001 | AServer | user demo 1 |
-| b.microsrv.docker.pkrss.com | 19002 | BServer | user demo 2 |
+| module     | port      | description                        |
+|:-----------|:--------- |:---------------------------------- |
+| consul     | tcp: 8300 8400 8500 8600\n udp:8301 8302 | - |
+| pkrss_microsrv_config | 18001 | spring cloud config server |
+| pkrss_microsrv_discovery | 18002 | spring cloud service discovery |
+| pkrss_microsrv_consul | 18003 | spring cloud ??? (dns and profile?, i not sure) |
+| pkrss_microsrv_gateway | 18004 | spring api gateway |
+| pkrss_microsrv_hystrix_dashboard | 18005 | spring boot hystrix background monitor server |
+| pkrss-microsrv-a | 19001 | user demo 1 |
+| pkrss-microsrv-b | 19002 | user demo 2 |
 
-* develop
+= other *
 
-1. how to change spring boot cloud config password in this sample project:  
-   see it in: pkrss-microsrv-config\src\main\resources\bootstrap.yml
-   
-2. some urls  	
-	http://<eurekaserver>/eureka/apps
-	
-other drafts:  
-Docker 1.12 Swarm Mode集群实战(第三章): https://sanwen8.cn/p/34e2EJX.html
-Docker 实战（五）：Docker Swarm Mode: http://www.tuicool.com/articles/nUbIn2z
-基于docker1.12创建swarm集群: https://yq.aliyun.com/articles/58886
-从零开始部署基于阿里容器云的微服务（consul+registrator+template）(一): http://alice.blog.51cto.com/707092/1896078
-在阿里云容器服务上开发基于Docker的Spring Cloud微服务应用: https://yq.aliyun.com/articles/57265
-docker-maven-plugin: https://github.com/spotify/docker-maven-plugin
-使用docker-maven-plugin插件实现Docker构建并提交到私有仓库: http://www.jianshu.com/p/c435ea4c0cc0
+normal old local docker operator command:
+$ docker create | stop | ps | rm
 
-# run in aliyun 
+docker swarm machine operator command:
+$ docker-machine create | stop | rm | ls
 
-wait for me continue...
+docker swarm operator command on machine:
+$ docker swarm init | join-token | leave | join
+
+docket network operator command on machine:
+$ docket network ls | create | inspect | rm
+
+docket swarm container service operator command in manager role of swarm machine:
+$ docker service ls | create | rm | logs
+
+docker list swarm node in manager role of swarm machine:
+$ docker node ls
+
+show consul run statist.
+$ docker service ps consul
+
+$ docker exec -it $(docker ps | grep "pkrss-microsrv-consul" | awk {'print $1'}) ping consul-default
+
+$ docker network inspect ingress
+
+delete consul service:
+$ docker service rm $(docker service ls | grep consul | awk '{print $1}')
+
+create service on worker machine:
+~ $ docker service create --name foo6 --constraint="node.role == worker" --network foo alpine sleep 999999
+
 
 # other docker command
 
@@ -224,3 +243,25 @@ PS C:\WINDOWS\system32> docker-machine worker2
  
 PS C:\WINDOWS\system32> & "C:\Program Files\Docker\Docker\Resources\bin\docker-machine.exe" env manager1 | Invoke-Expression
 PS C:\WINDOWS\system32> docker run consul
+
+
+* develop
+
+1. how to change spring boot cloud config password in this sample project:  
+   see it in: pkrss-microsrv-config\src\main\resources\bootstrap.yml
+   
+2. some urls  	
+	http://<eurekaserver>/eureka/apps
+	
+other drafts:  
+Docker 1.12 Swarm Mode集群实战(第三章): https://sanwen8.cn/p/34e2EJX.html
+Docker 实战（五）：Docker Swarm Mode: http://www.tuicool.com/articles/nUbIn2z
+基于docker1.12创建swarm集群: https://yq.aliyun.com/articles/58886
+从零开始部署基于阿里容器云的微服务（consul+registrator+template）(一): http://alice.blog.51cto.com/707092/1896078
+在阿里云容器服务上开发基于Docker的Spring Cloud微服务应用: https://yq.aliyun.com/articles/57265
+docker-maven-plugin: https://github.com/spotify/docker-maven-plugin
+使用docker-maven-plugin插件实现Docker构建并提交到私有仓库: http://www.jianshu.com/p/c435ea4c0cc0
+
+# run in aliyun 
+
+wait for me continue...
